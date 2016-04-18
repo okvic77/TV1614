@@ -24,6 +24,11 @@ xbox.on('left:move', position => {
     if (position.x != 0 || position.y != 0)
         winston.info('motor', position)
 });
+
+xbox.on('rightshoulder:press', key => winston.info('motor:stop'));
+
+xbox.on('start:press', key => winston.info('ping'));
+
 //xbox.on('right:move', (position) => winston.info('right:move', position));
 
 /* Acordeon vertical */
@@ -40,7 +45,31 @@ xbox.on('dright:release', key => winston.info('acordeon horizontal contraer:stop
 
 xbox.on('connected', () => {
     winston.info('Xbox controller connected');
-    xbox.setLed(0x01);
+    xbox.setLed(0x00);
 });
 
 xbox.on('not-found', () => winston.error('Xbox controller could not be found'));
+
+
+
+
+
+
+var app = require('express')();
+var server = require('http').Server(app);
+var io = require('socket.io')(server);
+
+server.listen(process.env.PORT || 4000, function () {
+  winston.info('web', server.address())
+});
+app.set('view engine', 'pug');
+app.get('/', function (req, res) {
+  res.render('main');
+});
+
+io.on('connection', function (socket) {
+  socket.emit('news', { hello: 'world' });
+  socket.on('my other event', function (data) {
+    console.log(data);
+  });
+});
