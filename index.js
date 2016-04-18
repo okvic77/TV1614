@@ -1,11 +1,14 @@
 var XboxController = require('xbox-controller'),
-    winston = require('winston');
+    winston = require('winston'),
+    _ = require('underscore');
 var xbox = new XboxController;
 
 /* Resets */
 xbox.on('x:press', key => {
-  io.sockets.emit('event', {hor:true});
-  //winston.info('reset horizontal');
+    io.sockets.emit('event', {
+        hor: true
+    });
+    //winston.info('reset horizontal');
 });
 xbox.on('x:release', key => winston.info('reset horizontal:stop'));
 
@@ -30,7 +33,7 @@ xbox.on('left:move', position => {
 
 xbox.on('rightshoulder:press', key => winston.info('motor:stop'));
 
-xbox.on('start:press', key => winston.info('ping'));
+
 
 //xbox.on('right:move', (position) => winston.info('right:move', position));
 
@@ -62,18 +65,34 @@ var app = require('express')();
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
 
-server.listen(7000, function () {
-  winston.info('web', server.address())
+server.listen(7000, function() {
+    winston.info('web', server.address())
 });
 app.set('view engine', 'pug');
-app.get('/', function (req, res) {
-  res.render('main');
+app.get('/', function(req, res) {
+    res.render('main');
 });
 
-io.on('connection', function (socket) {
-  console.log('connection');
-  socket.emit('news', { hello: 'world' });
-  socket.on('my other event', function (data) {
-    console.log(data);
-  });
+io.on('connection', function(pi) {
+    console.log('connection');
+
+    var events = {
+        'start:press': key => {
+            io.sockets.emit('tv:ping', {
+                hor: true
+            });
+            winston.info('ping');
+        }
+    };
+
+
+    _.each(events, (evento, key) => xbox.on(key, evento))
+    pi.on('tv:pong', function(data) {
+        winston.info('pong');
+    });
+
+    pi.on('disconnect', function() {
+      _.each(events, (evento, key) => xbox.removeListener(key, evento))
+        console.log('desconectado');
+    })
 });
