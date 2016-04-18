@@ -2,42 +2,42 @@ var XboxController = require('xbox-controller'),
     winston = require('winston');
 var xbox = new XboxController;
 
-xbox.on('a:press', function(key) {
-    console.log(key + ' press');
+/* Resets */
+xbox.on('x:press', key => winston.info('reset horizontal'));
+xbox.on('x:release', key => winston.info('reset horizontal:stop'));
+
+xbox.on('a:press', key => winston.info('reset vertical'));
+xbox.on('a:release', key => winston.info('reset vertical:stop'));
+
+xbox.on('y:press', key => winston.info('reset pinzas'));
+xbox.on('y:release', key => winston.info('reset pinzas:stop'));
+
+xbox.on('b:press', key => winston.info('reset'));
+xbox.on('b:release', key => winston.info('reset:stop'));
+
+/* Pinza control */
+xbox.on('lefttrigger', (position) => winston.info('pinza abrir', position));
+xbox.on('righttrigger', (position) => winston.info('pinza cerrar', position));
+
+/* Motores de dirección */
+xbox.on('left:move', (position) => winston.info('motor', position));
+//xbox.on('right:move', (position) => winston.info('right:move', position));
+
+/* Acordeon vertical */
+xbox.on('dup:press', key => winston.info('acordeon vertical subir:start'));
+xbox.on('dup:release', key => winston.info('acordeon vertical subir:stop'));
+xbox.on('ddown:press', key => winston.info('acordeon vertical bajar:start'));
+xbox.on('ddown:release', key => winston.info('acordeon vertical bajar:stop'));
+
+/* Acordeon horizontal */
+xbox.on('dleft:press', key => winston.info('acordeon horizontal expandir:start'));
+xbox.on('dleft:release', key => winston.info('acordeon horizontal expandir:stop'));
+xbox.on('dright:press', key => winston.info('acordeon horizontal contraer:start'));
+xbox.on('dright:release', key => winston.info('acordeon horizontal contraer:stop'));
+
+xbox.on('connected', () => {
+    winston.info('Xbox controller connected');
+    xbox.setLed(0x01);
 });
 
-xbox.on('b:release', function(key) {
-    console.log(key + ' release');
-});
-
-xbox.on('x:release', function(key) {
-    console.log(key + ' release');
-});
-
-xbox.on('y:release', function(key) {
-    console.log(key + ' release');
-});
-
-xbox.on('lefttrigger', function(position) {
-    console.log('lefttrigger', position);
-});
-
-xbox.on('righttrigger', function(position) {
-    console.log('righttrigger', position);
-});
-
-// xbox.on('left:move', function(position) {
-//     console.log('left:move', position);
-// });
-//
-// xbox.on('right:move', function(position) {
-//     console.log('right:move', position);
-// });
-
-xbox.on('connected', function() {
-    console.log('Xbox controller connected');
-});
-
-xbox.on('not-found', function() {
-    console.log('Xbox controller could not be found');
-});
+xbox.on('not-found', () => winston.error('Xbox controller could not be found'));
