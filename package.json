@@ -1,0 +1,24 @@
+{
+  "name": "tv1614",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/okvic77/TV1614.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/okvic77/TV1614/issues"
+  },
+  "homepage": "https://github.com/okvic77/TV1614#readme",
+  "dependencies": {
+    "express": "^4.13.4",
+    "winston": "^2.2.0",
+    "xbox-controller": "^0.7.0"
+  }
+}
