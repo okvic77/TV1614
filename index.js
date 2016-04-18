@@ -3,7 +3,10 @@ var XboxController = require('xbox-controller'),
 var xbox = new XboxController;
 
 /* Resets */
-xbox.on('x:press', key => winston.info('reset horizontal'));
+xbox.on('x:press', key => {
+  io.sockets.emit('event', {hor:true});
+  //winston.info('reset horizontal');
+});
 xbox.on('x:release', key => winston.info('reset horizontal:stop'));
 
 xbox.on('a:press', key => winston.info('reset vertical'));
@@ -59,7 +62,7 @@ var app = require('express')();
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
 
-server.listen(process.env.PORT || 4000, function () {
+server.listen(7000, function () {
   winston.info('web', server.address())
 });
 app.set('view engine', 'pug');
@@ -68,6 +71,7 @@ app.get('/', function (req, res) {
 });
 
 io.on('connection', function (socket) {
+  console.log('connection');
   socket.emit('news', { hello: 'world' });
   socket.on('my other event', function (data) {
     console.log(data);
