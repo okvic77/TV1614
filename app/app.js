@@ -20,7 +20,10 @@ xbox.on('lefttrigger', (position) => winston.info('pinza abrir', position));
 xbox.on('righttrigger', (position) => winston.info('pinza cerrar', position));
 
 /* Motores de dirección */
-xbox.on('left:move', (position) => winston.info('motor', position));
+xbox.on('left:move', position => {
+    if (position.x != 0 || position.y != 0)
+        winston.info('motor', position)
+});
 //xbox.on('right:move', (position) => winston.info('right:move', position));
 
 /* Acordeon vertical */
