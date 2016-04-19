@@ -1,0 +1,7 @@
+{
+    "uid": "tv16",
+    "append": true,
+    "watch": true,
+    "script": "index.js",
+    "logFile": "out.log"
+}

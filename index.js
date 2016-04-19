@@ -1,4 +1,5 @@
 var spawn = require("child_process").spawn;
+
 var socket = require('socket.io-client')('http://10.0.1.21:7000', {
 	reconnection: true,
 	reconnectionDelay: 200,
@@ -7,7 +8,7 @@ var socket = require('socket.io-client')('http://10.0.1.21:7000', {
 
 var _in, start = function(){
 	_in = setInterval(function(){
-		//console.log('image');
+		console.log('image');
 		//socket.emit('image', {data:true});
 	}, 1000)
 }, stop = function(){
