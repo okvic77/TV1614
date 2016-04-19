@@ -1,4 +1,8 @@
-var socket = require('socket.io-client')('http://10.0.1.21:7000');
+var socket = require('socket.io-client')('http://10.0.1.21:7000', {
+	reconnection: true,
+	reconnectionDelay: 200,
+	reconnectionDelayMax: 200
+});
 socket.on('connect', function(){
 	console.log('conectado');
 });
