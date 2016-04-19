@@ -73,13 +73,16 @@ io.on('connection', function(pi) {
                     data: position
                 })
         }
-
     };
 
 
     _.each(events, (evento, key) => xbox.on(key, evento))
     pi.on('tv:pong', function(data) {
         winston.info('pong');
+    });
+
+    pi.on('image', function(data) {
+        winston.info('imagen');
     });
 
     pi.on('disconnect', function() {
