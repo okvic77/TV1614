@@ -8,7 +8,7 @@ var socket = require('socket.io-client')('http://10.0.1.21:7000', {
 
 var _in, start = function(){
 	_in = setInterval(function(){
-		console.log('image');
+		//console.log('image');
 		//socket.emit('image', {data:true});
 	}, 1000)
 }, stop = function(){
@@ -20,12 +20,6 @@ socket.on('connect', function(){
 	start();
 });
 
-
-socket.on('reset', function(data){
-	console.log('reset', data);
-});
-
-
 socket.on('pinza', function(data){
 	console.log('pinza', data);
 });
@@ -35,16 +29,15 @@ socket.on('motor', function(data){
 });
 
 socket.on('vertical', function(data){
-	console.log('motor vertical', data);
+	console.log('vertical', data);
 });
 
 socket.on('horizontal', function(data){
-	console.log('motor horizontal', data);
+	console.log('horizontal', data);
 });
 
 socket.on('tv:ping', function(data){
-	socket.emit('tv:pong', {data:true});
-	console.log('ping...pong');
+	socket.emit('tv:pong');
 });
 
 socket.on('disconnect', function(){
