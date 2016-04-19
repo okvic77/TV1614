@@ -6,8 +6,27 @@ var socket = require('socket.io-client')('http://10.0.1.21:7000', {
 socket.on('connect', function(){
 	console.log('conectado');
 });
-socket.on('event', function(data){
-	console.log('event', data);
+
+
+socket.on('reset', function(data){
+	console.log('reset', data);
+});
+
+
+socket.on('pinza', function(data){
+	console.log('pinza', data);
+});
+
+socket.on('motor', function(data){
+	console.log('motor', data);
+});
+
+socket.on('vertical', function(data){
+	console.log('motor vertical', data);
+});
+
+socket.on('horizontal', function(data){
+	console.log('motor horizontal', data);
 });
 
 socket.on('tv:ping', function(data){
