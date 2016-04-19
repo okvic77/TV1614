@@ -3,62 +3,12 @@ var XboxController = require('xbox-controller'),
     _ = require('underscore');
 var xbox = new XboxController;
 
-/* Resets */
-xbox.on('x:press', key => {
-    io.sockets.emit('event', {
-        hor: true
-    });
-    //winston.info('reset horizontal');
-});
-xbox.on('x:release', key => winston.info('reset horizontal:stop'));
-
-xbox.on('a:press', key => winston.info('reset vertical'));
-xbox.on('a:release', key => winston.info('reset vertical:stop'));
-
-xbox.on('y:press', key => winston.info('reset pinzas'));
-xbox.on('y:release', key => winston.info('reset pinzas:stop'));
-
-xbox.on('b:press', key => winston.info('reset'));
-xbox.on('b:release', key => winston.info('reset:stop'));
-
-/* Pinza control */
-xbox.on('lefttrigger', (position) => winston.info('pinza abrir', position));
-xbox.on('righttrigger', (position) => winston.info('pinza cerrar', position));
-
-/* Motores de dirección */
-xbox.on('left:move', position => {
-    if (position.x != 0 || position.y != 0)
-        winston.info('motor', position)
-});
-
-xbox.on('rightshoulder:press', key => winston.info('motor:stop'));
-
-
-
-//xbox.on('right:move', (position) => winston.info('right:move', position));
-
-/* Acordeon vertical */
-xbox.on('dup:press', key => winston.info('acordeon vertical subir:start'));
-xbox.on('dup:release', key => winston.info('acordeon vertical subir:stop'));
-xbox.on('ddown:press', key => winston.info('acordeon vertical bajar:start'));
-xbox.on('ddown:release', key => winston.info('acordeon vertical bajar:stop'));
-
-/* Acordeon horizontal */
-xbox.on('dleft:press', key => winston.info('acordeon horizontal expandir:start'));
-xbox.on('dleft:release', key => winston.info('acordeon horizontal expandir:stop'));
-xbox.on('dright:press', key => winston.info('acordeon horizontal contraer:start'));
-xbox.on('dright:release', key => winston.info('acordeon horizontal contraer:stop'));
-
 xbox.on('connected', () => {
     winston.info('Xbox controller connected');
-    xbox.setLed(0x00);
 });
 
 xbox.on('not-found', () => winston.error('Xbox controller could not be found'));
-
-
-
-
+xbox.setLed(0x01);
 
 
 var app = require('express')();
@@ -75,14 +25,55 @@ app.get('/', function(req, res) {
 
 io.on('connection', function(pi) {
     console.log('connection');
-
+    xbox.setLed(0x06);
     var events = {
-        'start:press': key => {
-            io.sockets.emit('tv:ping', {
-                hor: true
-            });
-            winston.info('ping');
+        'a:press': () => pi.emit('reset', 'vertical'),
+        'y:press': () => pi.emit('reset', 'pinzas'),
+        'x:press': () => pi.emit('reset', 'horizontal'),
+        'b:press': () => pi.emit('reset', ['vertical', 'pinzas', 'horizontal']),
+
+        'lefttrigger': position => pi.emit('pinza', {
+            dir: 'open',
+            data: position
+        }),
+        'righttrigger': position => pi.emit('pinza', {
+            dir: 'close',
+            data: position
+        }),
+
+
+
+
+        'start:press': () => pi.emit('tv:ping'),
+
+
+        'dup:press': () => pi.emit('vertical', 'up:start'),
+        'dup:release': () => pi.emit('vertical', 'up:stop'),
+        'ddown:press': () => pi.emit('vertical', 'down:start'),
+        'ddown:release': () => pi.emit('vertical', 'down:stop'),
+
+
+        'dleft:press': () => pi.emit('horizontal', 'in:start'),
+        'dleft:release': () => pi.emit('horizontal', 'in:stop'),
+        'dright:press': () => pi.emit('horizontal', 'out:start'),
+        'dright:release': () => pi.emit('horizontal', 'out:stop'),
+
+        'rightshoulder:press': () => pi.emit('motor', 'reset'),
+        'left:move': position => {
+            if (position.x != 0 || position.y != 0)
+                pi.emit('motor', {
+                    eje: false,
+                    data: position
+                })
+        },
+        'right:move': position => {
+            if (position.x != 0 || position.y != 0)
+                pi.emit('motor', {
+                    eje: true,
+                    data: position
+                })
         }
+
     };
 
 
@@ -92,7 +83,8 @@ io.on('connection', function(pi) {
     });
 
     pi.on('disconnect', function() {
-      _.each(events, (evento, key) => xbox.removeListener(key, evento))
+        _.each(events, (evento, key) => xbox.removeListener(key, evento))
+        xbox.setLed(0x01);
         console.log('desconectado');
     })
 });
