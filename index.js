@@ -24,13 +24,18 @@ app.get('/', function(req, res) {
 });
 
 io.on('connection', function(pi) {
+  var pingpong;
     console.log('connection');
     xbox.setLed(0x06);
     var events = {
-        'a:press': () => pi.emit('reset', 'vertical'),
-        'y:press': () => pi.emit('reset', 'pinzas'),
-        'x:press': () => pi.emit('reset', 'horizontal'),
-        'b:press': () => pi.emit('reset', ['vertical', 'pinzas', 'horizontal']),
+        'a:press': () => pi.emit('vertical', 'reset'),
+        'y:press': () => pi.emit('pinza', 'reset'),
+        'x:press': () => pi.emit('horizontal', 'reset'),
+        'b:press': () => {
+          pi.emit('vertical', 'reset')
+          pi.emit('pinza', 'reset')
+          pi.emit('horizontal', 'reset')
+        },
 
         'lefttrigger': position => pi.emit('pinza', {
             dir: 'open',
@@ -44,7 +49,11 @@ io.on('connection', function(pi) {
 
 
 
-        'start:press': () => pi.emit('tv:ping'),
+        'start:press': () => {
+          pingpong = new Date();
+          winston.info('ping')
+          pi.emit('tv:ping');
+        },
 
 
         'dup:press': () => pi.emit('vertical', 'up:start'),
@@ -78,7 +87,7 @@ io.on('connection', function(pi) {
 
     _.each(events, (evento, key) => xbox.on(key, evento))
     pi.on('tv:pong', function(data) {
-        winston.info('pong');
+        winston.info('pong', `${new Date() - pingpong}ms`);
     });
 
     pi.on('image', function(data) {
