@@ -2,6 +2,7 @@ var XboxController = require('xbox-controller'),
     winston = require('winston'),
     _ = require('underscore');
 var xbox = new XboxController;
+var gm = require('gm').subClass({imageMagick: true});
 
 xbox.on('connected', () => {
     winston.info('Xbox controller connected');
@@ -24,6 +25,7 @@ app.get('/', function(req, res) {
 });
 
 io.on('connection', function(pi) {
+
   var pingpong;
     console.log('connection');
     xbox.setLed(0x06);
@@ -91,7 +93,12 @@ io.on('connection', function(pi) {
     });
 
     pi.on('image', function(data) {
-        winston.info('imagen');
+      gm(data, 'image.jpg')
+      .write('prueba.jpg', function (err) {
+        if (!err) console.log(' hooray! ');
+      });
+
+        //winston.info('imagen');
     });
 
     pi.on('disconnect', function() {
