@@ -20,7 +20,7 @@ if (cam.configGet().formatName !== "MJPG") {
 */
 
 const map = (x, in_min, in_max, out_min, out_max) => (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
-var socket = require('socket.io-client')('http://10.0.1.21:7000', {
+var socket = require('socket.io-client')('http://10.0.1.21:7000/pi', {
 	reconnection: true,
 	reconnectionDelay: 200,
 	reconnectionDelayMax: 200
@@ -31,11 +31,13 @@ var socket = require('socket.io-client')('http://10.0.1.21:7000', {
 async.forever(
     function(next) {
       camera.read((err, im) => {
-			socket.emit('image', im.toBuffer())
-			next();
+	      if (err) return next(err);
+			socket.emit('image', im.toBuffer(), () => next())
+			
 		});
     },
     function(err) {
+	    console.error('error en camara', err);
         // if next is called with a value in its first parameter, it will appear 
         // in here as 'err', and execution will stop. 
     }
