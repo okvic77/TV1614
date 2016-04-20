@@ -7,8 +7,14 @@ console.log(cam.configGet());
 var cv = require('opencv'), async = require('async');
 
 var camera = new cv.VideoCapture(0);
+/*
 camera.setWidth(640);
 camera.setHeight(480);
+*/
+
+camera.setWidth(320);
+camera.setHeight(240);
+
 var rpio = require('rpio');
 
 const map = (x, in_min, in_max, out_min, out_max) => (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
@@ -25,7 +31,6 @@ async.forever(
     function(next) {
 	    
 	    if (_in) {
-		    console.log('enviar imagen');
 		   camera.read((err, im) => {
 	      if (err) return next(err);
 	      
@@ -47,7 +52,6 @@ async.forever(
 	    }
       
 		else {
-			console.log('nada imagen');
 			setTimeout(next, 200);
 		}
     },
