@@ -11,8 +11,8 @@ xbox.on('connected', () => {
 xbox.on('not-found', () => winston.error('Xbox controller could not be found'));
 xbox.setLed(0x01);
 
-
-var app = require('express')();
+var express = require('express');
+var app = express();
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
 
@@ -20,12 +20,12 @@ server.listen(7000, function() {
     winston.info('web', server.address())
 });
 app.set('view engine', 'pug');
+app.use('/static', express.static('public'));
 app.get('/', function(req, res) {
     res.render('main');
 });
 
-io.on('connection', function(pi) {
-
+io.of('/pi').on('connection', function(pi) {
   var pingpong;
     console.log('connection');
     xbox.setLed(0x06);
@@ -92,10 +92,11 @@ io.on('connection', function(pi) {
         winston.info('pong', `${new Date() - pingpong}ms`);
     });
 
-    pi.on('image', function(data) {
-      gm(data, 'image.jpg')
-      .write('prueba.jpg', function (err) {
-        if (!err) console.log(' hooray! ');
+    pi.on('image', function(data, done) {
+
+      io.of('/stream').emit('image', {image:true, data: data.toString('base64')})
+      gm(data, 'image.jpg').write('prueba.jpg', function (err) {
+	      done();
       });
 
         //winston.info('imagen');
@@ -107,3 +108,11 @@ io.on('connection', function(pi) {
         console.log('desconectado');
     })
 });
+
+io.of('/stream').on('connection', user => {
+  console.log('user connected')
+
+  user.on('disconnect', function () {
+    console.log('user disconnected')
+  })
+})
