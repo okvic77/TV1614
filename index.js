@@ -9,32 +9,47 @@ var cv = require('opencv'), async = require('async');
 var camera = new cv.VideoCapture(0);
 camera.setWidth(640);
 camera.setHeight(480);
-
 var rpio = require('rpio');
-
-/*
-if (cam.configGet().formatName !== "MJPG") {
-  console.log("NOTICE: MJPG camera required");
-  process.exit(1);
-}
-*/
 
 const map = (x, in_min, in_max, out_min, out_max) => (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 var socket = require('socket.io-client')('http://10.0.1.21:7000/pi', {
 	reconnection: true,
 	reconnectionDelay: 200,
-	reconnectionDelayMax: 200
+	reconnectionDelayMax: 200,
+	timeout: 500
 });
 
 
-
+var _in = false;
 async.forever(
     function(next) {
-      camera.read((err, im) => {
+	    
+	    if (_in) {
+		    console.log('enviar imagen');
+		   camera.read((err, im) => {
 	      if (err) return next(err);
-			socket.emit('image', im.toBuffer(), () => next())
-			
-		});
+	      
+		  var _done = false, _ti = setTimeout(function(){
+			  _done = true;
+			  next();
+		  }, 1000);
+
+			socket.emit('image', im.toBuffer(), () => {
+				if (_done == false) {
+					_done = true;
+					next();
+					clearTimeout(_ti);
+				}
+				
+				
+			})
+		}); 
+	    }
+      
+		else {
+			console.log('nada imagen');
+			setTimeout(next, 200);
+		}
     },
     function(err) {
 	    console.error('error en camara', err);
@@ -44,12 +59,10 @@ async.forever(
 );
 
 
-var _in, start = function(){
-	_in = setInterval(() => {
-		
-	}, 200)
+var start = function(){
+	_in = true;
 }, stop = function(){
-	clearInterval(_in);
+	_in = false;
 }
 
 socket.on('connect', function(){
