@@ -2,7 +2,9 @@ var XboxController = require('xbox-controller'),
     winston = require('winston'),
     _ = require('underscore');
 var xbox = new XboxController;
-var gm = require('gm').subClass({imageMagick: true});
+var gm = require('gm').subClass({
+    imageMagick: true
+});
 
 xbox.on('connected', () => {
     winston.info('Xbox controller connected');
@@ -20,13 +22,13 @@ server.listen(7000, function() {
     winston.info('web', server.address())
 });
 app.set('view engine', 'pug');
-app.use('/static', express.static('public'));
+app.use('/static', express.static('public'), express.static('bower_components'));
 app.get('/', function(req, res) {
     res.render('main');
 });
-
+var save = false;
 io.of('/pi').on('connection', function(pi) {
-  var pingpong;
+    var pingpong;
     console.log('connection');
     xbox.setLed(0x06);
     var events = {
@@ -34,9 +36,9 @@ io.of('/pi').on('connection', function(pi) {
         'y:press': () => pi.emit('pinza', 'reset'),
         'x:press': () => pi.emit('horizontal', 'reset'),
         'b:press': () => {
-          pi.emit('vertical', 'reset')
-          pi.emit('pinza', 'reset')
-          pi.emit('horizontal', 'reset')
+            pi.emit('vertical', 'reset')
+            pi.emit('pinza', 'reset')
+            pi.emit('horizontal', 'reset')
         },
 
         'lefttrigger': position => pi.emit('pinza', {
@@ -52,9 +54,9 @@ io.of('/pi').on('connection', function(pi) {
 
 
         'start:press': () => {
-          pingpong = new Date();
-          winston.info('ping')
-          pi.emit('tv:ping');
+            pingpong = new Date();
+            winston.info('ping')
+            pi.emit('tv:ping');
         },
 
 
@@ -83,7 +85,8 @@ io.of('/pi').on('connection', function(pi) {
                     eje: true,
                     data: position
                 })
-        }
+        },
+        'leftshoulder:press': () => save = true,
     };
 
 
@@ -93,13 +96,16 @@ io.of('/pi').on('connection', function(pi) {
     });
 
     pi.on('image', function(data, done) {
+        done();
+        io.of('/stream').emit('image', {
+            image: true,
+            save: save,
+            data: data.toString('base64')
+        });
+        if (save) gm(data, 'image.jpg').write(`log/${new Date().toISOString()}.jpg`, err => winston.info('save', err));
 
-      io.of('/stream').emit('image', {image:true, data: data.toString('base64')})
-      gm(data, 'image.jpg').write('prueba.jpg', function (err) {
-	      done();
-      });
+        save = false;
 
-        //winston.info('imagen');
     });
 
     pi.on('disconnect', function() {
@@ -110,9 +116,9 @@ io.of('/pi').on('connection', function(pi) {
 });
 
 io.of('/stream').on('connection', user => {
-  console.log('user connected')
+    console.log('user connected')
 
-  user.on('disconnect', function () {
-    console.log('user disconnected')
-  })
+    user.on('disconnect', function() {
+        console.log('user disconnected')
+    })
 })
