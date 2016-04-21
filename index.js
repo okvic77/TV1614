@@ -75,14 +75,14 @@ io.of('/pi').on('connection', function(pi) {
         'left:move': position => {
             if (position.x != 0 || position.y != 0)
                 pi.emit('motor', {
-                    eje: false,
+                    eje: 'izquierdo',
                     data: position
                 })
         },
         'right:move': position => {
             if (position.x != 0 || position.y != 0)
                 pi.emit('motor', {
-                    eje: true,
+                    eje: 'derecho',
                     data: position
                 })
         },
