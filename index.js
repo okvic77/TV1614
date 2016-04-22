@@ -94,23 +94,34 @@ const config = {
 	},
 	dos: {
 		PWM: 33,
-		dir: [35, 37]
+		dir: [29, 31]
+	},
+	acordeon: {
+		PWM: 35,
+		dir: [37, 36]
 	}
 };
 
 rpio.open(config.uno.PWM, rpio.PWM);
 rpio.open(config.dos.PWM, rpio.PWM);
+rpio.open(config.acordeon.PWM, rpio.PWM);
 
 rpio.open(config.uno.dir[0], rpio.OUTPUT, rpio.LOW);
 rpio.open(config.uno.dir[1], rpio.OUTPUT, rpio.HIGH);
 rpio.open(config.dos.dir[0], rpio.OUTPUT, rpio.LOW);
 rpio.open(config.dos.dir[1], rpio.OUTPUT, rpio.HIGH);
 
+rpio.open(config.acordeon.dir[0], rpio.OUTPUT, rpio.LOW);
+rpio.open(config.acordeon.dir[1], rpio.OUTPUT, rpio.HIGH);
+
 rpio.pwmSetClockDivider(Math.pow(2, 5));
 
 
 rpio.pwmSetRange(config.uno.PWM, 1024);
 rpio.pwmSetRange(config.dos.PWM, 1024);
+rpio.pwmSetRange(config.acordeon.PWM, 1024);
+
+
 socket.on('motor', function(data) {
 
     if (data == 'reset') {
