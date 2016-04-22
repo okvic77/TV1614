@@ -1,8 +1,10 @@
 /*
-var v4l2camera = require("v4l2camera");
-var cam = new v4l2camera.Camera("/dev/video0");
+  Taller Vertical 2016, IMT, ITESM GDA
+  Codigo de Raspberry PI
+*/
 
-console.log(cam.configGet());
+/*
+  Esta primer seccion se importan las librerias relacionadas con la captura de imagen y otros.
 */
 var cv = require('opencv'),
     async = require('async'),
@@ -11,6 +13,9 @@ var cv = require('opencv'),
 var start = () => _in = true,
     stop = () => _in = false
 
+/*
+  Intento de conexion con camara.
+*/
 try {
     var camera = new cv.VideoCapture(0);
     camera.setWidth(320);
@@ -50,9 +55,18 @@ camera.setWidth(640);
 camera.setHeight(480);
 */
 
+
+/*
+  Libreria de GPIO y PWM.
+*/
 var rpio = require('rpio');
 
 const map = (x, in_min, in_max, out_min, out_max) => (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+
+
+/*
+  Conexion con el servidor socket.io
+*/
 var socket = require('socket.io-client')('http://10.0.1.21:7000/pi', {
     reconnection: true,
     reconnectionDelay: 200,
@@ -65,8 +79,14 @@ socket.on('connect', function() {
     start();
 });
 
+/*
+  Configuraciones.
+*/
 rpio.init({gpiomem: false, mapping: 'physical'});
 
+/*
+  Mapeo de pin de PI.
+*/
 const config = {
     derecha: {
         PWM: 12,
@@ -88,7 +108,6 @@ const config = {
 
 rpio.open(config.izquierdo.PWM, rpio.OUTPUT);
 rpio.open(config.derecha.PWM, rpio.OUTPUT);
-//rpio.open(config.acordeon.PWM, rpio.PWM);
 
 rpio.open(config.derecha.dir[0], rpio.OUTPUT, rpio.LOW);
 rpio.open(config.derecha.dir[1], rpio.OUTPUT, rpio.HIGH);
@@ -100,17 +119,18 @@ rpio.open(config.derecha.mirror[1], rpio.OUTPUT, rpio.HIGH);
 rpio.open(config.izquierdo.mirror[0], rpio.OUTPUT, rpio.LOW);
 rpio.open(config.izquierdo.mirror[1], rpio.OUTPUT, rpio.HIGH);
 
-//rpio.open(config.acordeon.dir[0], rpio.OUTPUT, rpio.LOW);
-//rpio.open(config.acordeon.dir[1], rpio.OUTPUT, rpio.HIGH);
 
 rpio.pwmSetClockDivider(Math.pow(2, 5));
 
 
-/* rpio.pwmSetRange(config.izquierdo.PWM, 1024);
-rpio.pwmSetRange(config.derecha.PWM, 1024); */
-
+/*
+  PWM por software para la velocidad de motores.
+*/
 var total = 100, PWM1 = 0.2, PWM2 = 0.2;
 
+/*
+  Motor izquierdo
+*/
 async.forever(function(done){
 	rpio.write(config.izquierdo.PWM, rpio.HIGH);
 	setTimeout(() => {
@@ -119,6 +139,9 @@ async.forever(function(done){
 	}, total * PWM1)
 });
 
+/*
+  Motor derecho
+*/
 async.forever(function(done){
 	rpio.write(config.derecha.PWM, rpio.HIGH);
 	setTimeout(() => {
@@ -129,11 +152,10 @@ async.forever(function(done){
 
 
 socket.on('motor', function(data) {
-
+	/*
+	  Direccion de motores
+	*/
     if (data == 'reset') {
-        //rpio.pwmSetData(config.izquierdo.PWM, 0);
-        //rpio.pwmSetData(config.derecha.PWM, 0);
-
         rpio.write(config.izquierdo.dir[0], rpio.LOW);
         rpio.write(config.izquierdo.dir[1], rpio.LOW);
         rpio.write(config.derecha.dir[0], rpio.LOW);
@@ -151,15 +173,12 @@ socket.on('motor', function(data) {
             rpio.write(config.derecha.dir[1], rpio.LOW);
             rpio.write(config.derecha.mirror[0], rpio.HIGH);
             rpio.write(config.derecha.mirror[1], rpio.LOW);
-            // adelante
         } else {
-            // atras
             rpio.write(config.derecha.dir[0], rpio.LOW);
             rpio.write(config.derecha.dir[1], rpio.HIGH);
             rpio.write(config.derecha.mirror[0], rpio.LOW);
             rpio.write(config.derecha.mirror[1], rpio.HIGH);
         }
-        //rpio.pwmSetData(config.derecha.PWM, valor);
     } else if (data.eje == 'izquierdo') {
         PWM2 = map(Math.abs(data.data.y), 6000, Math.pow(2, 15), 0, 1);
         if (data.data.y >= 0) {
@@ -167,19 +186,19 @@ socket.on('motor', function(data) {
             rpio.write(config.izquierdo.dir[1], rpio.LOW);
             rpio.write(config.izquierdo.mirror[0], rpio.HIGH);
             rpio.write(config.izquierdo.mirror[1], rpio.LOW);
-            // adelante
         } else {
-            // atras
             rpio.write(config.izquierdo.dir[0], rpio.LOW);
             rpio.write(config.izquierdo.dir[1], rpio.HIGH);
             rpio.write(config.izquierdo.mirror[0], rpio.LOW);
             rpio.write(config.izquierdo.mirror[1], rpio.HIGH);
         }
-        //rpio.pwmSetData(config.izquierdo.PWM, valor);
     }
 
 });
 
+/*
+  Control de la grua
+*/
 rpio.open(config.acordeon[0], rpio.OUTPUT, rpio.LOW);
 rpio.open(config.acordeon[1], rpio.OUTPUT, rpio.LOW);
 socket.on('vertical', function(data) {
@@ -201,6 +220,10 @@ socket.on('vertical', function(data) {
     }
 });
 
+
+/*
+  Control de la pinza
+*/
 rpio.open(config.pinza, rpio.PWM);
 socket.on('pinza', function(data) {
     rpio.pwmSetData(config.pinza, data.data * 4);
