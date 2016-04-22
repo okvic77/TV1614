@@ -68,20 +68,26 @@ socket.on('connect', function() {
 rpio.init({gpiomem: false, mapping: 'physical'});
 
 const config = {
-    izquierdo: {
-        PWM: 12,
-        dir: [16, 18]
-    },
     derecha: {
+        PWM: 12,
+        dir: [
+            16, 18
+        ],
+        mirror: [13, 15]
+    },
+    izquierdo: {
         PWM: 33,
-        dir: [29, 31]
+        dir: [
+            31, 29
+        ],
+        mirror: [11, 7]
     },
     pinza: 35, // PWM
-    acordeon: [37, 38]
+    acordeon: [38, 37]
 };
 
-rpio.open(config.izquierdo.PWM, rpio.PWM);
-rpio.open(config.derecha.PWM, rpio.PWM);
+rpio.open(config.izquierdo.PWM, rpio.OUTPUT);
+rpio.open(config.derecha.PWM, rpio.OUTPUT);
 //rpio.open(config.acordeon.PWM, rpio.PWM);
 
 rpio.open(config.derecha.dir[0], rpio.OUTPUT, rpio.LOW);
@@ -89,60 +95,95 @@ rpio.open(config.derecha.dir[1], rpio.OUTPUT, rpio.HIGH);
 rpio.open(config.izquierdo.dir[0], rpio.OUTPUT, rpio.LOW);
 rpio.open(config.izquierdo.dir[1], rpio.OUTPUT, rpio.HIGH);
 
+rpio.open(config.derecha.mirror[0], rpio.OUTPUT, rpio.LOW);
+rpio.open(config.derecha.mirror[1], rpio.OUTPUT, rpio.HIGH);
+rpio.open(config.izquierdo.mirror[0], rpio.OUTPUT, rpio.LOW);
+rpio.open(config.izquierdo.mirror[1], rpio.OUTPUT, rpio.HIGH);
+
 //rpio.open(config.acordeon.dir[0], rpio.OUTPUT, rpio.LOW);
 //rpio.open(config.acordeon.dir[1], rpio.OUTPUT, rpio.HIGH);
 
 rpio.pwmSetClockDivider(Math.pow(2, 5));
 
-rpio.pwmSetRange(config.izquierdo.PWM, 1024);
-rpio.pwmSetRange(config.derecha.PWM, 1024);
-//rpio.pwmSetRange(config.acordeon.PWM, 1024);
+
+/* rpio.pwmSetRange(config.izquierdo.PWM, 1024);
+rpio.pwmSetRange(config.derecha.PWM, 1024); */
+
+var total = 100, PWM1 = 0.2, PWM2 = 0.2;
+
+async.forever(function(done){
+	rpio.write(config.izquierdo.PWM, rpio.HIGH);
+	setTimeout(() => {
+		rpio.write(config.izquierdo.PWM, rpio.LOW);
+		setTimeout(done, total * (1-PWM1))
+	}, total * PWM1)
+});
+
+async.forever(function(done){
+	rpio.write(config.derecha.PWM, rpio.HIGH);
+	setTimeout(() => {
+		rpio.write(config.derecha.PWM, rpio.LOW);
+		setTimeout(done, total * (1-PWM2))
+	}, total * PWM2)
+});
+
 
 socket.on('motor', function(data) {
 
     if (data == 'reset') {
-        rpio.pwmSetData(config.izquierdo.PWM, 0);
-        rpio.pwmSetData(config.derecha.PWM, 0);
+        //rpio.pwmSetData(config.izquierdo.PWM, 0);
+        //rpio.pwmSetData(config.derecha.PWM, 0);
 
         rpio.write(config.izquierdo.dir[0], rpio.LOW);
         rpio.write(config.izquierdo.dir[1], rpio.LOW);
         rpio.write(config.derecha.dir[0], rpio.LOW);
         rpio.write(config.derecha.dir[1], rpio.LOW);
 
+        rpio.write(config.izquierdo.mirror[0], rpio.LOW);
+        rpio.write(config.izquierdo.mirror[1], rpio.LOW);
+        rpio.write(config.derecha.mirror[0], rpio.LOW);
+        rpio.write(config.derecha.mirror[1], rpio.LOW);
+
     } else if (data.eje == 'derecho') {
-        var valor = map(Math.abs(data.data.y), 6000, Math.pow(2, 15), 0, 1024);
+        PWM1 = map(Math.abs(data.data.y), 6000, Math.pow(2, 15), 0, 1);
         if (data.data.y >= 0) {
             rpio.write(config.derecha.dir[0], rpio.HIGH);
             rpio.write(config.derecha.dir[1], rpio.LOW);
+            rpio.write(config.derecha.mirror[0], rpio.HIGH);
+            rpio.write(config.derecha.mirror[1], rpio.LOW);
             // adelante
         } else {
             // atras
             rpio.write(config.derecha.dir[0], rpio.LOW);
             rpio.write(config.derecha.dir[1], rpio.HIGH);
+            rpio.write(config.derecha.mirror[0], rpio.LOW);
+            rpio.write(config.derecha.mirror[1], rpio.HIGH);
         }
-        rpio.pwmSetData(config.derecha.PWM, valor);
+        //rpio.pwmSetData(config.derecha.PWM, valor);
     } else if (data.eje == 'izquierdo') {
-        var valor = map(Math.abs(data.data.y), 6000, Math.pow(2, 15), 0, 1024);
+        PWM2 = map(Math.abs(data.data.y), 6000, Math.pow(2, 15), 0, 1);
         if (data.data.y >= 0) {
             rpio.write(config.izquierdo.dir[0], rpio.HIGH);
             rpio.write(config.izquierdo.dir[1], rpio.LOW);
+            rpio.write(config.izquierdo.mirror[0], rpio.HIGH);
+            rpio.write(config.izquierdo.mirror[1], rpio.LOW);
             // adelante
         } else {
             // atras
             rpio.write(config.izquierdo.dir[0], rpio.LOW);
             rpio.write(config.izquierdo.dir[1], rpio.HIGH);
+            rpio.write(config.izquierdo.mirror[0], rpio.LOW);
+            rpio.write(config.izquierdo.mirror[1], rpio.HIGH);
         }
-        rpio.pwmSetData(config.izquierdo.PWM, valor);
+        //rpio.pwmSetData(config.izquierdo.PWM, valor);
     }
 
 });
 
-
-
 rpio.open(config.acordeon[0], rpio.OUTPUT, rpio.LOW);
 rpio.open(config.acordeon[1], rpio.OUTPUT, rpio.LOW);
 socket.on('vertical', function(data) {
-
+    console.log('ver', data);
     switch (data) {
         case 'up':
             rpio.write(config.acordeon[1], rpio.HIGH);
@@ -162,7 +203,7 @@ socket.on('vertical', function(data) {
 
 rpio.open(config.pinza, rpio.PWM);
 socket.on('pinza', function(data) {
-    rpio.pwmSetData(config.pinza, data * 4);
+    rpio.pwmSetData(config.pinza, data.data * 4);
 });
 
 socket.on('tv:ping', function(data) {
