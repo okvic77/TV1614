@@ -60,16 +60,16 @@ io.of('/pi').on('connection', function(pi) {
         },
 
 
-        'dup:press': () => pi.emit('vertical', 'up:start'),
-        'dup:release': () => pi.emit('vertical', 'up:stop'),
-        'ddown:press': () => pi.emit('vertical', 'down:start'),
-        'ddown:release': () => pi.emit('vertical', 'down:stop'),
+        'dup:press': () => pi.emit('vertical', 'up'),
+        'dup:release': () => pi.emit('vertical', 'stop'),
+        'ddown:press': () => pi.emit('vertical', 'down'),
+        'ddown:release': () => pi.emit('vertical', 'stop'),
 
 
-        'dleft:press': () => pi.emit('horizontal', 'in:start'),
-        'dleft:release': () => pi.emit('horizontal', 'in:stop'),
-        'dright:press': () => pi.emit('horizontal', 'out:start'),
-        'dright:release': () => pi.emit('horizontal', 'out:stop'),
+        // 'dleft:press': () => pi.emit('horizontal', 'in:start'),
+        // 'dleft:release': () => pi.emit('horizontal', 'in:stop'),
+        // 'dright:press': () => pi.emit('horizontal', 'out:start'),
+        // 'dright:release': () => pi.emit('horizontal', 'out:stop'),
 
         'rightshoulder:press': () => pi.emit('motor', 'reset'),
         'left:move': position => {
